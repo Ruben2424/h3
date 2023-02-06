@@ -9,9 +9,9 @@ env:
   RUST_BACKTRACE: 1
   toolchain_style: stable
   toolchain_msrv: 1.59
-  toolchain_doc: nightly-2022-12-01
+  toolchain_doc: nightly-2023-02-05
   toolchain_lint: stable
-  toolchain_fuzz: nightly-2022-12-01
+  toolchain_fuzz: nightly-2023-02-05
 
 jobs:
   ci-pass:
