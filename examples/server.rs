@@ -7,7 +7,11 @@ use structopt::StructOpt;
 use tokio::{fs::File, io::AsyncReadExt};
 use tracing::{error, info, trace_span};
 
-use h3::{error::ErrorLevel, quic::BidiStream, server::RequestStream};
+use h3::{
+    error::ErrorLevel,
+    quic::BidiStream,
+    server::{builder, RequestStream},
+};
 use h3_quinn::quinn;
 
 #[derive(StructOpt, Debug)]
@@ -79,7 +83,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(None)
     };
 
-
     let Certs { cert, key } = opt.certs;
 
     // create quinn server endpoint and bind UDP socket
@@ -100,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tls_config.alpn_protocols = vec![ALPN.into()];
 
     let server_config = quinn::ServerConfig::with_crypto(Arc::new(tls_config));
-    let (endpoint, mut incoming) = h3_quinn::quinn::Endpoint::server(server_config, opt.listen)?;
+    let endpoint = quinn::Endpoint::server(server_config, opt.listen)?;
 
     info!("listening on {}", opt.listen);
 
@@ -116,7 +119,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(conn) => {
                     info!("new connection established");
 
-                    let mut h3_conn = h3::server::Connection::new(h3_quinn::Connection::new(conn))
+                    let mut h3_conn = builder()
+                        .build(h3_quinn::Connection::new(conn))
                         .await
                         .unwrap();
 
