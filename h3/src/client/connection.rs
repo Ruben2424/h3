@@ -10,7 +10,7 @@ use std::{
 use bytes::{Buf, BytesMut};
 use futures_util::future;
 use http::request;
-use tracing::{info, trace};
+use tracing::{info, instrument, trace};
 
 use crate::{
     connection::{self, ConnectionInner, ConnectionState, SharedStateRef},
@@ -118,7 +118,7 @@ where
 
 impl<T, B> SendRequest<T, B>
 where
-    T: quic::OpenStreams<B>,
+    T: quic::OpenStreams<B> ,
     B: Buf,
 {
     /// Send a HTTP/3 request to the server
@@ -330,6 +330,7 @@ where
 /// ```
 /// [`poll_close()`]: struct.Connection.html#method.poll_close
 /// [`shutdown()`]: struct.Connection.html#method.shutdown
+#[derive(Debug)]
 pub struct Connection<C, B>
 where
     C: quic::Connection<B>,
@@ -359,6 +360,7 @@ where
     }
 
     /// Maintain the connection state until it is closed
+    #[instrument]
     pub fn poll_close(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Error>> {
         while let Poll::Ready(result) = self.inner.poll_control(cx) {
             match result {
@@ -436,6 +438,7 @@ where
         //# receipt of a server-initiated bidirectional stream as a connection
         //# error of type H3_STREAM_CREATION_ERROR unless such an extension has
         //# been negotiated.
+        
         if self.inner.poll_accept_request(cx).is_ready() {
             return Poll::Ready(Err(self.inner.close(
                 Code::H3_STREAM_CREATION_ERROR,
