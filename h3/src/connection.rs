@@ -238,6 +238,7 @@ where
     }
 
     /// Initiates the connection and opens a control stream
+    #[instrument]
     pub async fn new(mut conn: C, shared: SharedStateRef, config: Config) -> Result<Self, Error> {
         //= https://www.rfc-editor.org/rfc/rfc9114#section-6.2
         //# Endpoints SHOULD create the HTTP control stream as well as the
@@ -294,14 +295,14 @@ where
     }
 
     /// Send GOAWAY with specified max_id, iff max_id is smaller than the previous one.
-
+    #[instrument]
     pub async fn shutdown<T>(
         &mut self,
         sent_closing: &mut Option<T>,
         max_id: T,
     ) -> Result<(), Error>
     where
-        T: From<VarInt> + PartialOrd<T> + Copy,
+        T: From<VarInt> + PartialOrd<T> + Copy + Debug,
         VarInt: From<T>,
     {
         if let Some(sent_id) = sent_closing {
@@ -322,6 +323,7 @@ where
         stream::write(&mut self.control_send, Frame::Goaway(max_id.into())).await
     }
 
+    #[instrument]
     #[allow(missing_docs)]
     pub fn poll_accept_request(
         &mut self,
@@ -343,6 +345,7 @@ where
     /// Polls incoming streams
     ///
     /// Accepted streams which are not control, decoder, or encoder streams are buffer in `accepted_recv_streams`
+    #[instrument]
     pub fn poll_accept_recv(&mut self, cx: &mut Context<'_>) -> Result<(), Error> {
         if let Some(ref e) = self.shared.read("poll_accept_request").error {
             return Err(e.clone());
@@ -431,6 +434,7 @@ where
     }
 
     /// Waits for the control stream to be received and reads subsequent frames.
+    #[instrument]
     pub fn poll_control(&mut self, cx: &mut Context<'_>) -> Poll<Result<Frame<PayloadLen>, Error>> {
         if let Some(ref e) = self.shared.read("poll_accept_request").error {
             return Poll::Ready(Err(e.clone()));
@@ -596,7 +600,8 @@ where
 
     /// Closes a Connection with code and reason.
     /// It returns an [`Error`] which can be returned.
-    pub fn close<T: AsRef<str>>(&mut self, code: Code, reason: T) -> Error {
+    #[instrument]
+    pub fn close<T: AsRef<str> + Debug>(&mut self, code: Code, reason: T) -> Error {
         self.shared.write("connection close err").error =
             Some(code.with_reason(reason.as_ref(), crate::error::ErrorLevel::ConnectionError));
         self.conn.close(code, reason.as_ref().as_bytes());
@@ -604,6 +609,7 @@ where
     }
 
     // start grease stream and send data
+    #[instrument]
     fn poll_grease_stream(&mut self, cx: &mut Context<'_>) -> Poll<()> {
         if matches!(self.grease_step, GreaseStatus::NotStarted(_)) {
             self.grease_step = match self.conn.poll_open_send(cx) {
@@ -688,6 +694,7 @@ where
     }
 
     #[allow(missing_docs)]
+    #[instrument]
     pub fn accepted_streams_mut(&mut self) -> &mut AcceptedStreams<C, B> {
         &mut self.accepted_streams
     }

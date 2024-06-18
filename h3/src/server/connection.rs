@@ -96,7 +96,7 @@ where
     }
 
     /// Closes the connection with a code and a reason.
-    pub fn close<T: AsRef<str>>(&mut self, code: Code, reason: T) -> Error {
+    pub fn close<T: AsRef<str> + Debug>(&mut self, code: Code, reason: T) -> Error {
         self.inner.close(code, reason)
     }
 }

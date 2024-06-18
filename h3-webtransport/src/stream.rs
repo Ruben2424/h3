@@ -1,4 +1,4 @@
-use std::task::Poll;
+use std::{fmt::Debug, task::Poll};
 
 use bytes::{Buf, Bytes};
 use h3::{quic, stream::BufRecvStream};
@@ -129,7 +129,10 @@ where
         self.stream.send_id()
     }
 
-    fn send_data<T: Into<h3::stream::WriteBuf<B>>>(&mut self, data: T) -> Result<(), Self::Error> {
+    fn send_data<T: Into<h3::stream::WriteBuf<B>> + Debug>(
+        &mut self,
+        data: T,
+    ) -> Result<(), Self::Error> {
         self.stream.send_data(data)
     }
 
@@ -238,7 +241,10 @@ where
         self.stream.poll_ready(cx)
     }
 
-    fn send_data<T: Into<h3::stream::WriteBuf<B>>>(&mut self, data: T) -> Result<(), Self::Error> {
+    fn send_data<T: Into<h3::stream::WriteBuf<B>> + Debug>(
+        &mut self,
+        data: T,
+    ) -> Result<(), Self::Error> {
         self.stream.send_data(data)
     }
 }

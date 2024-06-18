@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::task::{Context, Poll};
 
 use bytes::Buf;
@@ -159,7 +160,7 @@ where
         self.stream.poll_ready(cx)
     }
 
-    fn send_data<D: Into<WriteBuf<B>>>(&mut self, data: D) -> Result<(), Self::Error> {
+    fn send_data<D: Into<WriteBuf<B>> + Debug>(&mut self, data: D) -> Result<(), Self::Error> {
         self.stream.send_data(data)
     }
 

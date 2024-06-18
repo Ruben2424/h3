@@ -30,7 +30,7 @@ use crate::{
 pub(crate) async fn write<S, D, B>(stream: &mut S, data: D) -> Result<(), Error>
 where
     S: SendStream<B>,
-    D: Into<WriteBuf<B>>,
+    D: Into<WriteBuf<B>> + Debug,
     B: Buf,
 {
     stream.send_data(data)?;
@@ -520,7 +520,7 @@ where
         self.stream.poll_ready(cx)
     }
 
-    fn send_data<T: Into<WriteBuf<B>>>(&mut self, data: T) -> Result<(), Self::Error> {
+    fn send_data<T: Into<WriteBuf<B>> + Debug>(&mut self, data: T) -> Result<(), Self::Error> {
         self.stream.send_data(data)
     }
 }

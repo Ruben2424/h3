@@ -27,6 +27,7 @@ use h3::{
     quic::{self, Error, StreamId, WriteBuf},
 };
 use tokio_util::sync::ReusableBoxFuture;
+use tracing::instrument;
 
 /// A QUIC connection backed by Quinn
 ///
@@ -204,6 +205,7 @@ where
     type BidiStream = BidiStream<B>;
     type OpenError = ConnectionError;
 
+    #[instrument]
     fn poll_open_bidi(
         &mut self,
         cx: &mut task::Context<'_>,
@@ -222,6 +224,7 @@ where
         }))
     }
 
+    #[instrument]
     fn poll_open_send(
         &mut self,
         cx: &mut task::Context<'_>,
@@ -236,6 +239,7 @@ where
         Poll::Ready(Ok(Self::SendStream::new(send)))
     }
 
+    #[instrument]
     fn close(&mut self, code: h3::error::Code, reason: &[u8]) {
         self.conn.close(
             VarInt::from_u64(code.value()).expect("error code VarInt"),
@@ -303,6 +307,7 @@ where
     type BidiStream = BidiStream<B>;
     type OpenError = ConnectionError;
 
+    #[instrument]
     fn poll_open_bidi(
         &mut self,
         cx: &mut task::Context<'_>,
@@ -321,6 +326,7 @@ where
         }))
     }
 
+    #[instrument]
     fn poll_open_send(
         &mut self,
         cx: &mut task::Context<'_>,
@@ -335,6 +341,7 @@ where
         Poll::Ready(Ok(Self::SendStream::new(send)))
     }
 
+    #[instrument]
     fn close(&mut self, code: h3::error::Code, reason: &[u8]) {
         self.conn.close(
             VarInt::from_u64(code.value()).expect("error code VarInt"),
@@ -368,7 +375,7 @@ where
 
 impl<B> quic::BidiStream<B> for BidiStream<B>
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     type SendStream = SendStream<B>;
     type RecvStream = RecvStream;
@@ -378,10 +385,11 @@ where
     }
 }
 
-impl<B: Buf> quic::RecvStream for BidiStream<B> {
+impl<B: Buf + Debug> quic::RecvStream for BidiStream<B> {
     type Buf = Bytes;
     type Error = ReadError;
 
+    #[instrument]
     fn poll_data(
         &mut self,
         cx: &mut task::Context<'_>,
@@ -389,10 +397,12 @@ impl<B: Buf> quic::RecvStream for BidiStream<B> {
         self.recv.poll_data(cx)
     }
 
+    #[instrument]
     fn stop_sending(&mut self, error_code: u64) {
         self.recv.stop_sending(error_code)
     }
 
+    #[instrument]
     fn recv_id(&self) -> StreamId {
         self.recv.recv_id()
     }
@@ -400,33 +410,38 @@ impl<B: Buf> quic::RecvStream for BidiStream<B> {
 
 impl<B> quic::SendStream<B> for BidiStream<B>
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     type Error = SendStreamError;
 
+    #[instrument]
     fn poll_ready(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.send.poll_ready(cx)
     }
 
+    #[instrument]
     fn poll_finish(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.send.poll_finish(cx)
     }
 
+    #[instrument]
     fn reset(&mut self, reset_code: u64) {
         self.send.reset(reset_code)
     }
 
-    fn send_data<D: Into<WriteBuf<B>>>(&mut self, data: D) -> Result<(), Self::Error> {
+    #[instrument]
+    fn send_data<D: Into<WriteBuf<B>> + Debug>(&mut self, data: D) -> Result<(), Self::Error> {
         self.send.send_data(data)
     }
 
+    #[instrument]
     fn send_id(&self) -> StreamId {
         self.send.send_id()
     }
 }
 impl<B> quic::SendStreamUnframed<B> for BidiStream<B>
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     fn poll_send<D: Buf>(
         &mut self,
