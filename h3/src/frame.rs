@@ -15,6 +15,7 @@ use crate::{
     quic::{BidiStream, RecvStream, SendStream},
 };
 
+#[derive(Debug)]
 /// Decodes Frames from the underlying QUIC stream
 pub struct FrameStream<S, B> {
     pub stream: BufRecvStream<S, B>,
@@ -197,7 +198,7 @@ where
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FrameDecoder {
     expected: Option<usize>,
 }

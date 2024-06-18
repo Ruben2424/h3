@@ -1,6 +1,7 @@
 //! Provides the server side WebTransport session
 
 use std::{
+    fmt::Debug,
     marker::PhantomData,
     pin::Pin,
     sync::Mutex,
@@ -38,8 +39,8 @@ use crate::stream::{BidiStream, RecvStream, SendStream};
 /// Similar to [`h3::server::Connection`](https://docs.rs/h3/latest/h3/server/struct.Connection.html) it is generic over the QUIC implementation and Buffer.
 pub struct WebTransportSession<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     // See: https://datatracker.ietf.org/doc/html/draft-ietf-webtrans-http3/#section-2-3
     session_id: SessionId,
@@ -51,8 +52,8 @@ where
 
 impl<C, B> WebTransportSession<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     /// Accepts a *CONNECT* request for establishing a WebTransport session.
     ///
@@ -363,8 +364,8 @@ pub enum AcceptedBi<C: quic::Connection<B>, B: Buf> {
 /// Future for [`Connection::read_datagram`]
 pub struct ReadDatagram<'a, C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     conn: &'a Mutex<Connection<C, B>>,
     _marker: PhantomData<B>,
@@ -372,8 +373,8 @@ where
 
 impl<'a, C, B> Future for ReadDatagram<'a, C, B>
 where
-    C: quic::Connection<B> + RecvDatagramExt,
-    B: Buf,
+    C: quic::Connection<B> + RecvDatagramExt + Debug,
+    B: Buf + Debug,
 {
     type Output = Result<Option<(SessionId, C::Buf)>, Error>;
 
@@ -395,16 +396,16 @@ where
 /// Future for [`WebTransportSession::accept_uni`]
 pub struct AcceptUni<'a, C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     conn: &'a Mutex<Connection<C, B>>,
 }
 
 impl<'a, C, B> Future for AcceptUni<'a, C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     type Output = Result<Option<(SessionId, RecvStream<C::RecvStream, B>)>, Error>;
 

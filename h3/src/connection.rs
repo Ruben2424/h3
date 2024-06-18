@@ -1,5 +1,6 @@
 use std::{
     convert::TryFrom,
+    fmt::Debug,
     marker::PhantomData,
     sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
     task::{Context, Poll},
@@ -9,7 +10,7 @@ use bytes::{Buf, Bytes, BytesMut};
 use futures_util::{future, ready};
 use http::HeaderMap;
 use stream::WriteBuf;
-use tracing::warn;
+use tracing::{instrument, warn};
 
 use crate::{
     config::{Config, Settings},
@@ -27,6 +28,7 @@ use crate::{
     webtransport::SessionId,
 };
 
+#[derive(Debug)]
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct SharedState {
@@ -38,7 +40,7 @@ pub struct SharedState {
     pub closing: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[doc(hidden)]
 pub struct SharedStateRef(Arc<RwLock<SharedState>>);
 
@@ -75,6 +77,7 @@ pub trait ConnectionState {
     }
 }
 
+#[derive(Debug)]
 #[allow(missing_docs)]
 pub struct AcceptedStreams<C, B>
 where
@@ -97,6 +100,7 @@ where
     }
 }
 
+#[derive(Debug)]
 #[allow(missing_docs)]
 pub struct ConnectionInner<C, B>
 where
@@ -144,6 +148,7 @@ where
     pub config: Config,
 }
 
+#[derive(Debug)]
 enum GreaseStatus<S, B>
 where
     S: SendStream<B>,
@@ -163,9 +168,10 @@ where
 
 impl<B, C> ConnectionInner<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
+    #[instrument]
     /// Sends the settings and initializes the control streams
     pub async fn send_control_stream_headers(&mut self) -> Result<(), Error> {
         #[cfg(test)]

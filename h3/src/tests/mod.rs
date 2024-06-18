@@ -13,6 +13,7 @@ mod request;
 
 use std::{
     convert::TryInto,
+    fmt::Debug,
     net::{Ipv6Addr, ToSocketAddrs},
     sync::Arc,
     time::Duration,
@@ -134,7 +135,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn next(&mut self) -> impl quic::Connection<Bytes> {
+    pub async fn next(&mut self) -> impl quic::Connection<Bytes> + Debug {
         Connection::new(self.endpoint.accept().await.unwrap().await.unwrap())
     }
 }

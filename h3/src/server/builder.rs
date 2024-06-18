@@ -8,8 +8,8 @@
 //! ```rust
 //! fn doc<C,B>(conn: C)
 //! where
-//! C: h3::quic::Connection<B>,
-//! B: bytes::Buf,
+//! C: h3::quic::Connection<B> + std::fmt::Debug,
+//! B: bytes::Buf + std::fmt::Debug,
 //! {
 //!     let mut server_builder = h3::server::builder();
 //!     // Set the maximum header size
@@ -21,7 +21,7 @@
 //! }
 //! ```
 
-use std::{collections::HashSet, result::Result};
+use std::{collections::HashSet, fmt::Debug, result::Result};
 
 use bytes::Buf;
 
@@ -122,8 +122,8 @@ impl Builder {
     /// This method creates a [`Connection`] instance with the settings in the [`Builder`].
     pub async fn build<C, B>(&self, conn: C) -> Result<Connection<C, B>, Error>
     where
-        C: quic::Connection<B>,
-        B: Buf,
+        C: quic::Connection<B> + Debug,
+        B: Buf + Debug,
     {
         let (sender, receiver) = mpsc::unbounded_channel();
         Ok(Connection {

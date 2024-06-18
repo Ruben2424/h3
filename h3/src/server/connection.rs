@@ -4,6 +4,7 @@
 
 use std::{
     collections::HashSet,
+    fmt::Debug,
     marker::PhantomData,
     option::Option,
     result::Result,
@@ -48,10 +49,11 @@ use super::stream::{ReadDatagram, RequestStream};
 /// Create a new Instance with [`Connection::new()`].
 /// Accept incoming requests with [`Connection::accept()`].
 /// And shutdown a connection with [`Connection::shutdown()`].
+#[derive(Debug)]
 pub struct Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     /// TODO: temporarily break encapsulation for `WebTransportSession`
     pub inner: ConnectionInner<C, B>,
@@ -71,8 +73,8 @@ where
 
 impl<C, B> ConnectionState for Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     fn shared_state(&self) -> &SharedStateRef {
         &self.inner.shared
@@ -81,8 +83,8 @@ where
 
 impl<C, B> Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     /// Create a new HTTP/3 server connection with default settings
     ///
@@ -101,8 +103,8 @@ where
 
 impl<C, B> Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     /// Accept an incoming request.
     ///
@@ -416,8 +418,8 @@ where
 
 impl<C, B> Connection<C, B>
 where
-    C: quic::Connection<B> + SendDatagramExt<B>,
-    B: Buf,
+    C: quic::Connection<B> + SendDatagramExt<B> + Debug,
+    B: Buf + Debug,
 {
     /// Sends a datagram
     pub fn send_datagram(&mut self, stream_id: StreamId, data: B) -> Result<(), Error> {
@@ -432,8 +434,8 @@ where
 
 impl<C, B> Connection<C, B>
 where
-    C: quic::Connection<B> + RecvDatagramExt,
-    B: Buf,
+    C: quic::Connection<B> + RecvDatagramExt + Debug,
+    B: Buf + Debug,
 {
     /// Reads an incoming datagram
     pub fn read_datagram(&mut self) -> ReadDatagram<C, B> {
@@ -446,8 +448,8 @@ where
 
 impl<C, B> Drop for Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     fn drop(&mut self) {
         self.inner.close(Code::H3_NO_ERROR, "");

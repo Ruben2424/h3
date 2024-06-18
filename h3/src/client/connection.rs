@@ -1,6 +1,7 @@
 //! Client implementation of the HTTP/3 protocol
 
 use std::{
+    fmt::Debug,
     marker::PhantomData,
     sync::{atomic::AtomicUsize, Arc},
     task::{Context, Poll, Waker},
@@ -268,10 +269,10 @@ where
 /// # async fn doc<C, B>(mut connection: Connection<C, B>)
 /// #    -> JoinHandle<Result<(), Box<dyn std::error::Error + Send + Sync>>>
 /// # where
-/// #    C: quic::Connection<B> + Send + 'static,
-/// #    C::SendStream: Send + 'static,
-/// #    C::RecvStream: Send + 'static,
-/// #    B: Buf + Send + 'static,
+/// #    C: quic::Connection<B> + Send + 'static + std::fmt::Debug,
+/// #    C::SendStream: Send + 'static + std::fmt::Debug,
+/// #    C::RecvStream: Send + 'static + std::fmt::Debug,
+/// #    B: Buf + Send + 'static + std::fmt::Debug,
 /// # {
 /// // Run the driver on a different task
 /// tokio::spawn(async move {
@@ -290,13 +291,14 @@ where
 /// # use h3::client::Connection;
 /// # use h3::client::SendRequest;
 /// # use tokio::{self, sync::oneshot, task::JoinHandle};
+/// # use std::fmt::Debug;
 /// # async fn doc<C, B>(mut connection: Connection<C, B>)
 /// #    -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 /// # where
-/// #    C: quic::Connection<B> + Send + 'static,
+/// #    C: quic::Connection<B> + Send + 'static + Debug,
 /// #    C::SendStream: Send + 'static,
 /// #    C::RecvStream: Send + 'static,
-/// #    B: Buf + Send + 'static,
+/// #    B: Buf + Send + 'static + Debug,
 /// # {
 /// // Prepare a channel to stop the driver thread
 /// let (shutdown_tx, shutdown_rx) = oneshot::channel();
@@ -342,8 +344,8 @@ where
 
 impl<C, B> Connection<C, B>
 where
-    C: quic::Connection<B>,
-    B: Buf,
+    C: quic::Connection<B> + Debug,
+    B: Buf + Debug,
 {
     /// Initiate a graceful shutdown, accepting `max_push` potentially in-flight server pushes
     pub async fn shutdown(&mut self, _max_push: usize) -> Result<(), Error> {

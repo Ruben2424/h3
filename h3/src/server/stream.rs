@@ -11,7 +11,7 @@ use crate::{
 use pin_project_lite::pin_project;
 
 use super::connection::{Connection, RequestEnd};
-use std::{marker::PhantomData, sync::Arc};
+use std::{fmt::Debug, marker::PhantomData, sync::Arc};
 
 use std::{
     option::Option,
@@ -219,7 +219,9 @@ pin_project! {
     pub struct ReadDatagram<'a, C, B>
     where
             C: quic::Connection<B>,
+            C: Debug,
             B: Buf,
+            B: Debug,
         {
             pub(super) conn: &'a mut Connection<C, B>,
             pub(super) _marker: PhantomData<B>,
@@ -228,8 +230,8 @@ pin_project! {
 
 impl<'a, C, B> Future for ReadDatagram<'a, C, B>
 where
-    C: quic::Connection<B> + RecvDatagramExt,
-    B: Buf,
+    C: quic::Connection<B> + RecvDatagramExt + Debug,
+    B: Buf + Debug,
 {
     type Output = Result<Option<Datagram<C::Buf>>, Error>;
 

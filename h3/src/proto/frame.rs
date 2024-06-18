@@ -1,7 +1,7 @@
 use bytes::{Buf, BufMut, Bytes};
 use std::{
     convert::TryInto,
-    fmt::{self, Debug},
+    fmt::{self},
 };
 use tracing::trace;
 

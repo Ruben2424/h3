@@ -13,7 +13,7 @@ use h3_webtransport::{
 };
 use http::Method;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+use std::{fmt::Debug, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 use structopt::StructOpt;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::pin;
@@ -264,7 +264,7 @@ where
 
 /// This method will echo all inbound datagrams, unidirectional and bidirectional streams.
 #[tracing::instrument(level = "info", skip(session))]
-async fn handle_session_and_echo_all_inbound_messages<C>(
+async fn handle_session_and_echo_all_inbound_messages<C: Debug>(
     session: WebTransportSession<C, Bytes>,
 ) -> anyhow::Result<()>
 where

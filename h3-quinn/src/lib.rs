@@ -5,7 +5,7 @@
 
 use std::{
     convert::TryInto,
-    fmt::{self, Display},
+    fmt::{self, Debug, Display},
     future::Future,
     pin::Pin,
     sync::Arc,
@@ -40,6 +40,13 @@ pub struct Connection {
     datagrams: BoxStream<'static, <ReadDatagram<'static> as Future>::Output>,
 }
 
+/// implement Debug for [`Connection`]
+impl Debug for Connection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Connection").finish()
+    }
+}
+
 impl Connection {
     /// Create a [`Connection`] from a [`quinn::Connection`]
     pub fn new(conn: quinn::Connection) -> Self {
@@ -70,7 +77,7 @@ impl std::error::Error for ConnectionError {}
 
 impl fmt::Display for ConnectionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        <quinn::ConnectionError as Display>::fmt(&self.0, f)
     }
 }
 
@@ -149,7 +156,7 @@ impl From<quinn::SendDatagramError> for SendDatagramError {
 
 impl<B> quic::Connection<B> for Connection
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     type RecvStream = RecvStream;
     type OpenStreams = OpenStreams;
@@ -191,7 +198,7 @@ where
 
 impl<B> quic::OpenStreams<B> for Connection
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     type SendStream = SendStream<B>;
     type BidiStream = BidiStream<B>;
@@ -281,9 +288,16 @@ pub struct OpenStreams {
     opening_uni: Option<BoxStream<'static, <OpenUni<'static> as Future>::Output>>,
 }
 
+/// Implement debug for [`OpenStreams`]
+impl Debug for OpenStreams {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OpenStreams").finish()
+    }
+}
+
 impl<B> quic::OpenStreams<B> for OpenStreams
 where
-    B: Buf,
+    B: Buf + Debug,
 {
     type SendStream = SendStream<B>;
     type BidiStream = BidiStream<B>;
@@ -343,6 +357,7 @@ impl Clone for OpenStreams {
 ///
 /// Implements [`quic::BidiStream`] which allows the stream to be split
 /// into two structs each implementing one direction.
+#[derive(Debug)]
 pub struct BidiStream<B>
 where
     B: Buf,
@@ -425,6 +440,7 @@ where
 /// Quinn-backed receive stream
 ///
 /// Implements a [`quic::RecvStream`] backed by a [`quinn::RecvStream`].
+#[derive(Debug)]
 pub struct RecvStream {
     stream: Option<quinn::RecvStream>,
     read_chunk_fut: ReadChunkFuture,
@@ -507,7 +523,7 @@ impl std::error::Error for ReadError {
 
 impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        <quinn::ReadError as Display>::fmt(&self.0, f)
     }
 }
 
@@ -545,6 +561,7 @@ impl Error for ReadError {
 /// Quinn-backed send stream
 ///
 /// Implements a [`quic::SendStream`] backed by a [`quinn::SendStream`].
+#[derive(Debug)]
 pub struct SendStream<B: Buf> {
     stream: Option<quinn::SendStream>,
     writing: Option<WriteBuf<B>>,

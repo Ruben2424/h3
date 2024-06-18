@@ -1,6 +1,7 @@
 //! HTTP/3 client builder
 
 use std::{
+    fmt::Debug,
     marker::PhantomData,
     sync::{atomic::AtomicUsize, Arc},
     task::Poll,
@@ -26,8 +27,8 @@ pub fn builder() -> Builder {
 /// Create a new HTTP/3 client with default settings
 pub async fn new<C, O>(conn: C) -> Result<(Connection<C, Bytes>, SendRequest<O, Bytes>), Error>
 where
-    C: quic::Connection<Bytes, OpenStreams = O>,
-    O: quic::OpenStreams<Bytes>,
+    C: quic::Connection<Bytes, OpenStreams = O> + Debug,
+    O: quic::OpenStreams<Bytes> + Debug,
 {
     //= https://www.rfc-editor.org/rfc/rfc9114#section-3.3
     //= type=implication
@@ -47,9 +48,9 @@ where
 /// # use h3::quic;
 /// # async fn doc<C, O, B>(quic: C)
 /// # where
-/// #   C: quic::Connection<B, OpenStreams = O>,
-/// #   O: quic::OpenStreams<B>,
-/// #   B: bytes::Buf,
+/// #   C: quic::Connection<B, OpenStreams = O> + std::fmt::Debug,
+/// #   O: quic::OpenStreams<B> + std::fmt::Debug,
+/// #   B: bytes::Buf + std::fmt::Debug,
 /// # {
 /// let h3_conn = h3::client::builder()
 ///     .max_field_section_size(8192)
@@ -100,9 +101,9 @@ impl Builder {
         quic: C,
     ) -> Result<(Connection<C, B>, SendRequest<O, B>), Error>
     where
-        C: quic::Connection<B, OpenStreams = O>,
-        O: quic::OpenStreams<B>,
-        B: Buf,
+        C: quic::Connection<B, OpenStreams = O> + Debug,
+        O: quic::OpenStreams<B> + Debug,
+        B: Buf + Debug,
     {
         let open = quic.opener();
         let conn_state = SharedStateRef::default();

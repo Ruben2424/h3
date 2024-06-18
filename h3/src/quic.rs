@@ -3,6 +3,7 @@
 //! This module includes traits and types meant to allow being generic over any
 //! QUIC implementation.
 
+use std::fmt::Debug;
 use std::task::{self, Poll};
 
 use bytes::Buf;
@@ -33,11 +34,12 @@ impl<'a, E: Error + 'a> From<E> for Box<dyn Error + 'a> {
 /// Trait representing a QUIC connection.
 pub trait Connection<B: Buf>: OpenStreams<B> {
     /// The type produced by `poll_accept_recv()`
-    type RecvStream: RecvStream;
+    type RecvStream: RecvStream + Debug;
     /// A producer of outgoing Unidirectional and Bidirectional streams.
-    type OpenStreams: OpenStreams<B, SendStream = Self::SendStream, BidiStream = Self::BidiStream>;
+    type OpenStreams: OpenStreams<B, SendStream = Self::SendStream, BidiStream = Self::BidiStream>
+        + Debug;
     /// Error type yielded by these trait methods
-    type AcceptError: Into<Box<dyn Error>>;
+    type AcceptError: Into<Box<dyn Error>> + Debug;
 
     /// Accept an incoming unidirectional stream
     ///
@@ -89,11 +91,11 @@ pub trait RecvDatagramExt {
 /// Trait for opening outgoing streams
 pub trait OpenStreams<B: Buf> {
     /// The type produced by `poll_open_bidi()`
-    type BidiStream: SendStream<B> + RecvStream;
+    type BidiStream: SendStream<B> + RecvStream + Debug;
     /// The type produced by `poll_open_send()`
-    type SendStream: SendStream<B>;
+    type SendStream: SendStream<B> + Debug;
     /// Error type yielded by these trait methods
-    type OpenError: Into<Box<dyn Error>>;
+    type OpenError: Into<Box<dyn Error>> + Debug;
 
     /// Poll the connection to create a new bidirectional stream.
     fn poll_open_bidi(

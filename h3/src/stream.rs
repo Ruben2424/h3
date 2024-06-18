@@ -1,4 +1,5 @@
 use std::{
+    fmt::Debug,
     marker::PhantomData,
     pin::Pin,
     task::{Context, Poll},
@@ -50,7 +51,8 @@ const WRITE_BUF_ENCODE_SIZE: usize = StreamType::MAX_ENCODED_SIZE + Frame::MAX_E
 /// data is necessary (say, in `quic::SendStream::send_data`). It also has a public API ergonomy
 /// advantage: `WriteBuf` doesn't have to appear in public associated types. On the other hand,
 /// QUIC implementers have to call `into()`, which will encode the header in `Self::buf`.
-pub struct WriteBuf<B> {
+#[derive(Debug)]
+pub struct WriteBuf<B: Buf> {
     buf: [u8; WRITE_BUF_ENCODE_SIZE],
     len: usize,
     pos: usize,
@@ -247,6 +249,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub(super) enum AcceptedRecvStream<S, B>
 where
     S: quic::RecvStream,
@@ -261,6 +264,7 @@ where
 }
 
 /// Resolves an incoming streams type as well as `PUSH_ID`s and `SESSION_ID`s
+#[derive(Debug)]
 pub(super) struct AcceptRecvStream<S, B> {
     stream: BufRecvStream<S, B>,
     ty: Option<StreamType>,
