@@ -19,13 +19,14 @@ use futures::{
     stream::{self, select, Select},
     Stream, StreamExt,
 };
+
+#[cfg(feature = "datagram")]
+use h3_datagram::{datagram::Datagram, quic_traits};
+
 pub use quinn::{self, Endpoint, OpenBi, OpenUni, VarInt, WriteError};
 use quinn::{ApplicationClose, ClosedStream, ReadDatagram};
 
-use h3::{
-    ext::Datagram,
-    quic::{self, Error, IncomingStreamType, StreamId, WriteBuf},
-};
+use h3::quic::{self, Error, IncomingStreamType, StreamId, WriteBuf};
 use tokio_util::sync::ReusableBoxFuture;
 
 #[cfg(feature = "tracing")]
@@ -270,7 +271,8 @@ where
     }
 }
 
-impl<B> quic::SendDatagramExt<B> for Connection<B>
+#[cfg(feature = "datagram")]
+impl<B> quic_traits::SendDatagramExt<B> for Connection<B>
 where
     B: Buf,
 {
@@ -287,7 +289,8 @@ where
     }
 }
 
-impl<B> quic::RecvDatagramExt for Connection<B>
+#[cfg(feature = "datagram")]
+impl<B> quic_traits::RecvDatagramExt for Connection<B>
 where
     B: Buf,
 {
